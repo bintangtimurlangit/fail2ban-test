@@ -3,8 +3,8 @@
 Replay benchmark.log entries into rsyslog for Fail2Ban testing.
 
 The script streams a saved SSH log back into the container's logger command
-while roughly respecting original inter-event timing. Use libfaketime for
-rsyslog/fail2ban processes separately; this script only controls emission pace.
+while roughly respecting original inter-event timing. Run rsyslog/fail2ban
+under `faketime` (libfaketime) separately; this script only controls emission pace.
 """
 
 from __future__ import annotations

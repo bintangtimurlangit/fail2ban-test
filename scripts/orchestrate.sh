@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Orchestrate a full Fail2Ban replay run inside the LXC container.
-# Requires rsyslog and fail2ban installed plus libfaketime for service wrapping.
+# Requires rsyslog and fail2ban installed plus faketime for service wrapping.
 
 : "${DATA_ROOT:=/mnt/replay/fail2ban-test}"
 : "${LOG_FILE:=${DATA_ROOT}/benchmark.log}"
@@ -26,7 +26,7 @@ require_cmd() {
 }
 
 require_cmd fail2ban-client
-require_cmd libfaketime
+require_cmd faketime
 require_cmd logger
 require_cmd python3
 
@@ -43,10 +43,10 @@ if command -v iptables >/dev/null 2>&1; then
 fi
 
 echo "[orchestrate] starting rsyslog under faketime"
-libfaketime "${FAKETIME_SPEC}" systemctl start rsyslog
+faketime "${FAKETIME_SPEC}" systemctl start rsyslog
 
 echo "[orchestrate] starting fail2ban under faketime"
-libfaketime "${FAKETIME_SPEC}" systemctl start fail2ban
+faketime "${FAKETIME_SPEC}" systemctl start fail2ban
 
 sleep 2
 echo "[orchestrate] baseline jail status"

@@ -12,6 +12,7 @@ APT_PACKAGES=(
   fail2ban
   rsyslog
   libfaketime
+  faketime
   python3
   python3-venv
   python3-pip
@@ -45,7 +46,7 @@ else
 fi
 
 echo "[bootstrap] Verifying commands"
-for cmd in fail2ban-client libfaketime logger python3; do
+for cmd in fail2ban-client faketime logger python3; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "[bootstrap] ERROR: $cmd not found in PATH"
     exit 1

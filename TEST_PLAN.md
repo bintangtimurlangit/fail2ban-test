@@ -6,7 +6,7 @@
 - Ensure repeatable automation for an LXC container dedicated to Fail2Ban.
 
 ### Assumptions & Dependencies
-- Container OS: Debian/Ubuntu LXC with Fail2Ban ≥0.11, rsyslog, and libfaketime available.
+- Container OS: Debian/Ubuntu LXC with Fail2Ban ≥0.11, rsyslog, and faketime/libfaketime available.
 - Jail configuration focuses on SSH (`sshd` jail) with custom filters mirroring Proxmox log format; jail actions log ban/unban events with timestamps and IP.
 - `test_labeled.parquet` contains authoritative labels for each event; controller has Python + pandas/pyarrow to parse it.
 - Log replay driver shared with SSHGuard plan to maintain parity; adjustments limited to Fail2Ban-specific service control and metrics taps.
@@ -22,7 +22,7 @@
    - Copy Proxmox-specific filter regex into `/etc/fail2ban/filter.d/ssh-proxmox.conf`.
    - Configure dedicated jail `ssh-proxmox` with adjustable `maxretry`, `findtime`, `bantime` to match production.
 2. **Inject log lines**  
-   - Run rsyslog + fail2ban-server within `libfaketime` wrapper.
+   - Run rsyslog + fail2ban-server within the `faketime` (libfaketime) wrapper.
    - Feed chronological log lines synced to `test_labeled.parquet` timestamps using the same replay controller as SSHGuard.
 3. **Capture telemetry**  
    - Enable `fail2ban-server -x` debug logging to emit detailed ban decision traces.

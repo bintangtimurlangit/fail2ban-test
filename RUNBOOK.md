@@ -30,7 +30,7 @@ cd /mnt/replay/fail2ban-test/scripts
 sudo ./bootstrap.sh
 ```
 
-This installs apt packages (`fail2ban`, `rsyslog`, `libfaketime`, `python3-venv`, etc.),
+This installs apt packages (`fail2ban`, `rsyslog`, `libfaketime` + `faketime`, `python3-venv`, etc.),
 creates `/opt/f2b-replay`, installs `pandas`/`pyarrow`, and copies
 `action_logger.py` into `/usr/local/bin/f2b_action_logger.py`.
 
@@ -86,7 +86,7 @@ chmod +x orchestrate.sh
 
 The script:
 - Stops rsyslog/fail2ban, flushes jail firewall chain.
-- Restarts both services under `libfaketime`.
+- Restarts both services under `faketime`.
 - Runs `replay.py` to stream `benchmark.log`.
 - Captures jail status before/after.
 - Runs `collect_fail2ban.py` to compute metrics and update `results/history.json`.
