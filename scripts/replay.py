@@ -94,13 +94,21 @@ def parse_args() -> argparse.Namespace:
         "--sleep-cap",
         type=float,
         default=5.0,
-        help="Maximum sleep per log delta (seconds) after speed factor applied.",
+        help="Maximum sleep per log delta (seconds) after speed factor applied. "
+             "When using --use-faketime, this is only for system pacing (recommended: 0.1s).",
     )
     parser.add_argument(
         "--status-interval",
         type=int,
         default=1000,
         help="Print progress every N emitted lines.",
+    )
+    parser.add_argument(
+        "--use-faketime",
+        action="store_true",
+        default=False,
+        help="Use faketime to set system time to each log entry's timestamp. "
+             "This makes logger use original timestamps instead of current time.",
     )
     return parser.parse_args()
 
@@ -160,14 +168,24 @@ def read_log_lines(path: Path, start_year: int, ip_filter: Optional[str]) -> Ite
             yield LogLine(raw=raw.rstrip("\n"), timestamp=timestamp)
 
 
-def emit_line(cmd: list[str], line: str, dry_run: bool) -> None:
+def emit_line(cmd: list[str], line: str, timestamp: datetime, dry_run: bool, use_faketime: bool) -> None:
     if dry_run:
         print(line)
         return
-    subprocess.run(cmd, input=line + "\n", text=True, check=True)
+    
+    # Format timestamp for faketime: YYYY-MM-DD HH:MM:SS
+    faketime_spec = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+    
+    if use_faketime:
+        # Use faketime to set system time to the log entry's timestamp
+        # This makes logger use the original timestamp, not current time
+        faketime_cmd = ["faketime", "-f", f"@{faketime_spec}"] + cmd
+        subprocess.run(faketime_cmd, input=line + "\n", text=True, check=True)
+    else:
+        subprocess.run(cmd, input=line + "\n", text=True, check=True)
 
 
-def replay(lines: Iterable[LogLine], speed_factor: float, sleep_cap: float, status_interval: int, cmd: list[str], dry_run: bool, max_lines: Optional[int]) -> None:
+def replay(lines: Iterable[LogLine], speed_factor: float, sleep_cap: float, status_interval: int, cmd: list[str], dry_run: bool, max_lines: Optional[int], use_faketime: bool) -> None:
     iterator = iter(lines)
     emitted = 0
     last_ts: Optional[datetime] = None
@@ -178,7 +196,7 @@ def replay(lines: Iterable[LogLine], speed_factor: float, sleep_cap: float, stat
             if delta > 0:
                 scaled = min(delta / speed_factor, sleep_cap)
                 time.sleep(max(0.0, scaled))
-        emit_line(cmd, line.raw, dry_run=dry_run)
+        emit_line(cmd, line.raw, line.timestamp, dry_run=dry_run, use_faketime=use_faketime)
         emitted += 1
         last_ts = line.timestamp
         if status_interval and emitted % status_interval == 0:
@@ -207,6 +225,7 @@ def main() -> int:
         cmd=command,
         dry_run=args.dry_run,
         max_lines=args.max_lines,
+        use_faketime=args.use_faketime,
     )
     return 0
 

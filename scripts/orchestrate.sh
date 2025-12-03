@@ -12,6 +12,7 @@ set -euo pipefail
 : "${JAIL_NAME:=ssh-proxmox}"
 : "${FAKETIME_SPEC:=-0d}"
 : "${REPLAY_SPEED:=600}"
+: "${SLEEP_CAP:=0.1}"
 : "${LOGGER_CMD:=logger --priority authpriv.info --tag replay}"
 
 RESULTS_DIR="${RESULTS_ROOT}/${RUN_ID}"
@@ -52,13 +53,15 @@ sleep 2
 echo "[orchestrate] baseline jail status"
 fail2ban-client status "${JAIL_NAME}" > "${RESULTS_DIR}/status_before.txt"
 
-echo "[orchestrate] launching replay"
+echo "[orchestrate] launching replay with faketime timestamp matching"
 python3 "${DATA_ROOT}/scripts/replay.py" \
   --log-file "${LOG_FILE}" \
   --parquet "${PARQUET_FILE}" \
   --speed-factor "${REPLAY_SPEED}" \
+  --sleep-cap "${SLEEP_CAP}" \
   --logger-cmd "${LOGGER_CMD}" \
   --status-interval 5000 \
+  --use-faketime \
   2>&1 | tee "${RESULTS_DIR}/replay.log"
 
 echo "[orchestrate] jail status after replay"
